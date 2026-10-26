@@ -35,6 +35,7 @@ const CAPRI_IMPORT = "./capri-main.js";
 const MAIN_PARTS = ["out", "main", "capri-main.js"];
 const PANEL_PARTS = ["out", "renderer", "capri-panel.js"];
 const PRELOAD_PARTS = ["out", "preload", "index.js"];
+const PRELOAD_PARTS_CJS = ["out", "preload", "index.cjs"];
 const INDEX_PARTS = ["out", "renderer", "index.html"];
 const PKG_PARTS = ["package.json"];
 const LOADER_PARTS = ["out", "main", "oc-addons.js"];
@@ -123,6 +124,10 @@ function setEntry(json, parts, entry) {
   if (!parent || !parent.files) throw new Error("asar path not found: " + parts.join("/"));
   parent.files[parts[parts.length - 1]] = entry;
 }
+// The desktop app renamed the preload entry (index.js -> index.cjs): patch whichever is there.
+function preloadParts(json) {
+  return nodeAt(json, PRELOAD_PARTS_CJS) ? PRELOAD_PARTS_CJS : PRELOAD_PARTS;
+}
 function readEntry(asar, json, dataStart, parts) {
   const node = nodeAt(json, parts);
   if (!node || node.files) return null;
@@ -170,15 +175,16 @@ function patchPreload(src, add) {
   // Drop any previously injected capri line so the patch stays idempotent.
   src = src.split("\n").filter((line) => !/capri(State|Config|Command|Models|Plugin)\s*:/.test(line)).join("\n");
   if (!add) return src;
-  const needle = 'electron.contextBridge.exposeInMainWorld("api", api)';
-  if (!src.includes(needle)) throw new Error("preload: injection point not found");
+  // The app's own preload no longer exposes a window.api object to extend, so expose
+  // the bridge under its own key; the renderer reads window.capriApi first, window.api after.
   const inject =
-    'Object.assign(api,{capriState:()=>electron.ipcRenderer.invoke("capri-state"),' +
-    'capriConfig:(p)=>electron.ipcRenderer.invoke("capri-config",p),' +
-    'capriCommand:(n)=>electron.ipcRenderer.invoke("capri-command",n),' +
-    'capriModels:()=>electron.ipcRenderer.invoke("capri-models"),' +
-    'capriPlugin:(a)=>electron.ipcRenderer.invoke("capri-plugin",a)});\n';
-  return src.replace(needle, inject + needle);
+    ';{const e=require("electron");e.contextBridge.exposeInMainWorld("capriApi",{' +
+    'capriState:()=>e.ipcRenderer.invoke("capri-state"),' +
+    'capriConfig:(p)=>e.ipcRenderer.invoke("capri-config",p),' +
+    'capriCommand:(n)=>e.ipcRenderer.invoke("capri-command",n),' +
+    'capriModels:()=>e.ipcRenderer.invoke("capri-models"),' +
+    'capriPlugin:(a)=>e.ipcRenderer.invoke("capri-plugin",a)});}';
+  return (src.endsWith("\n") ? src : src + "\n") + inject + "\n";
 }
 
 // An existing loader (created by another addon) may not know about this addon:
@@ -244,8 +250,9 @@ function install(args) {
   ensureSharedBackup(asar);
 
   const header = readHeader(asar);
+  const preloadAt = preloadParts(header.json);
   const pkgRaw = readEntry(asar, header.json, header.dataStart, PKG_PARTS);
-  const preloadRaw = readEntry(asar, header.json, header.dataStart, PRELOAD_PARTS);
+  const preloadRaw = readEntry(asar, header.json, header.dataStart, preloadAt);
   const indexRaw = readEntry(asar, header.json, header.dataStart, INDEX_PARTS);
   if (!pkgRaw || !preloadRaw || !indexRaw) { console.error("expected files not found in the asar"); process.exit(1); }
 
@@ -277,7 +284,7 @@ function install(args) {
   add(MAIN_PARTS, mainBuf);
   add(PANEL_PARTS, panelBuf);
   add(LOADER_PARTS, loaderBuf);
-  add(PRELOAD_PARTS, preloadBuf);
+  add(preloadAt, preloadBuf);
   add(INDEX_PARTS, indexBuf);
   add(PKG_PARTS, pkgBuf);
 
@@ -307,8 +314,9 @@ function remove(args) {
     process.exit(1);
   }
   const header = readHeader(asar);
+  const preloadAt = preloadParts(header.json);
   const pkgRaw = readEntry(asar, header.json, header.dataStart, PKG_PARTS);
-  const preloadRaw = readEntry(asar, header.json, header.dataStart, PRELOAD_PARTS);
+  const preloadRaw = readEntry(asar, header.json, header.dataStart, preloadAt);
   const indexRaw = readEntry(asar, header.json, header.dataStart, INDEX_PARTS);
   if (!pkgRaw || !preloadRaw || !indexRaw) { console.error("expected files not found in the asar"); process.exit(1); }
 
@@ -331,7 +339,7 @@ function remove(args) {
     appended.push(buf);
   };
   add(MAIN_PARTS, stubBuf);
-  add(PRELOAD_PARTS, preloadBuf);
+  add(preloadAt, preloadBuf);
   add(INDEX_PARTS, indexBuf);
   add(PKG_PARTS, pkgBuf);
 
@@ -395,7 +403,7 @@ function verify(args) {
   const asar = resolveAsar(appDir);
   const header = readHeader(asar);
   const pkg = JSON.parse(readEntry(asar, header.json, header.dataStart, PKG_PARTS).toString("utf8"));
-  const preload = readEntry(asar, header.json, header.dataStart, PRELOAD_PARTS).toString("utf8");
+  const preload = readEntry(asar, header.json, header.dataStart, preloadParts(header.json)).toString("utf8");
   const index = readEntry(asar, header.json, header.dataStart, INDEX_PARTS).toString("utf8");
   const main = readEntry(asar, header.json, header.dataStart, MAIN_PARTS);
   const panel = readEntry(asar, header.json, header.dataStart, PANEL_PARTS);
