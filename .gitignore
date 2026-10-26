@@ -2,3 +2,4 @@ node_modules/
 *.ocaddons-backup
 *.capri-new
 *.capri-restore
+AGENTS.md
