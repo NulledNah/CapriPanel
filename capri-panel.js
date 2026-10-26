@@ -221,6 +221,7 @@
   var muteRow = toggleRow("Muto", function (v) { setConfig({ muted: v }); });
   var wanderRow = toggleRow("Vaga quando è inattiva", function (v) { setConfig({ wander: v }); });
   var possessRow = toggleRow("Possiedi le finestre", function (v) { setConfig({ possess: v }); });
+  var followRow = toggleRow("Vive con OpenCode", function (v) { setConfig({ follow: v }); });
 
   var modelSel = el("select", {});
   modelSel.addEventListener("change", function () { setConfig({ chatModel: modelSel.value || null }); });
@@ -257,6 +258,7 @@
     row("Dimensione", scaleSeg),
     volumeRow,
     row("Modello IA (Ollama)", modelSel),
+    followRow.row,
     advanced,
     el("div", { class: "cap-plugin" }, [pluginState, pluginBtn]),
     el("div", { class: "cap-foot" }, [
@@ -434,6 +436,7 @@
     muteRow.input.checked = !!cfg.muted;
     wanderRow.input.checked = cfg.wander !== false;
     possessRow.input.checked = cfg.possess !== false;
+    followRow.input.checked = cfg.follow === true;
 
     var options = [["", "Predefinito"]].concat(state.models.map(function (name) { return [name, name]; }));
     if (cfg.chatModel && !state.models.some(function (name) { return name === cfg.chatModel; })) {
