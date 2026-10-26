@@ -1,8 +1,9 @@
 # CapriPanel
 
 A small Capri icon in the OpenCode desktop prompt bar. Clicking it opens a
-settings panel in Capri's colours that drives the [Capri](https://github.com/mochiiwuff/capri-desktop)
-app: master on/off, teleport/satellite/report/chat/demo, language, size,
+settings panel in Capri's colours that drives the [Capri for
+OpenCode](https://github.com/NulledNah/capri-opencode) app: master on/off,
+teleport/satellite/report/chat/demo, language, size,
 animations, rest spot, volume/mute, wander, window possession, Ollama model and
 the OpenCode plugin install/remove.
 
@@ -14,9 +15,11 @@ so they can be installed, removed and updated independently.
 
 - OpenCode desktop (Electron) installed.
 - Node.js 18 or newer (to run the installer).
-- Capri running (this fork, which exposes the local control API on
-  `127.0.0.1:47823`). Without it the panel shows **OFFLINE** and controls are
-  disabled.
+- Capri running: the [Capri for OpenCode](https://github.com/NulledNah/capri-opencode)
+  build, which exposes the local control API on `127.0.0.1:47823`. Upstream
+  Capri does not have it, so the panel stays **OFFLINE** with anything else.
+- Capri's OpenCode plugin installed — *Plugin OpenCode: Installa* in the panel
+  does it. Without the plugin the app has no events to show.
 
 ## Install
 
@@ -48,10 +51,18 @@ API:
 ## Notes
 
 - The master switch sends `disable` (watching off + put away) or `enable`.
-- Removing/installing the OpenCode plugin takes effect after an OpenCode
-  restart (plugins load at startup).
+- OpenCode 2 reloads plugins on change, so install/remove from the panel takes
+  effect right away; a restart also works.
 - The icon falls back to a floating button if the prompt bar layout changes.
 
 ## Check
 
     node test_selfcheck.mjs
+
+## Credits
+
+Capri / Project Capricorn, Cyberpunk and Cyberpunk: Edgerunners belong to CD
+PROJEKT RED, Studio Trigger and Netflix. Non-commercial fan project, no
+affiliation. The app is a fork of
+[mochiiwuff/capri-desktop](https://github.com/mochiiwuff/capri-desktop):
+[Capri for OpenCode](https://github.com/NulledNah/capri-opencode). Code: MIT.
