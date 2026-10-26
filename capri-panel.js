@@ -458,6 +458,10 @@
 
   // ---- mount --------------------------------------------------------------
   function composerRow() {
+    // 2.1.4 keeps the model/effort controls in [data-slot=composer-controls]; older
+    // builds used a form.prompt-input with a flex-1 cell.
+    var controls = document.querySelectorAll("[data-component=composer] [data-slot=composer-controls] > div");
+    if (controls.length) return controls[controls.length - 1];
     var forms = document.querySelectorAll("form");
     for (var i = forms.length - 1; i >= 0; i--) {
       if (String(forms[i].className).indexOf("prompt-input") < 0) continue;
