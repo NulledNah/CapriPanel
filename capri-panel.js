@@ -257,7 +257,7 @@
     row("Lingua", langSel),
     row("Dimensione", scaleSeg),
     volumeRow,
-    row("Modello IA (Ollama)", modelSel),
+    row("Modello IA", modelSel),
     followRow.row,
     advanced,
     el("div", { class: "cap-plugin" }, [pluginState, pluginBtn]),

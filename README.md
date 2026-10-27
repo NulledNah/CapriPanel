@@ -4,7 +4,7 @@ A small Capri icon in the OpenCode desktop prompt bar. Clicking it opens a
 settings panel in Capri's colours that drives the [Capri for
 OpenCode](https://github.com/NulledNah/capri-opencode) app: master on/off,
 teleport/satellite/report/chat/demo, language, size,
-animations, rest spot, volume/mute, wander, window possession, Ollama model and
+animations, rest spot, volume/mute, wander, window possession, AI model and
 the OpenCode plugin install/remove.
 
 It works by patching the packaged `app.asar` (append-only and reversible) and
@@ -20,6 +20,13 @@ so they can be installed, removed and updated independently.
   Capri does not have it, so the panel stays **OFFLINE** with anything else.
 - Capri's OpenCode plugin installed — *Plugin OpenCode: Installa* in the panel
   does it. Without the plugin the app has no events to show.
+
+## Compatibility
+
+Built and tested against **Capri for OpenCode 0.4.x**. Older 0.3.x builds
+expose the same local API, so the panel still works there; 0.4.x adds the
+multi-provider chat, and the model list then follows whatever provider is
+picked in Capri (Ollama or a cloud/local one).
 
 ## Install
 

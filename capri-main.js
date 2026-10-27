@@ -76,7 +76,7 @@ function safe(fn) {
 ipcMain.handle("capri-state", safe(async () => {
   const state = await capri("/state");
   if (!state || state.ok !== true) return { ok: false, error: (state && state.error) || "Capri is not running" };
-  state.models = await models();
+  state.models = Array.isArray(state.models) && state.models.length ? state.models : await models();
   return state;
 }));
 
